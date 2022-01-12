@@ -31,6 +31,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
+DATABASE_URL = os.environ['MONGODB_URI']
 
 # Application definition
 
@@ -118,7 +119,6 @@ DATABASES = {
         }
     }
 }
-DATABASE_URL = os.environ['MONGODB_URI']
 #DATABASES['default'] = dj_database_url.config(default=os.environ['MONGODB_URI'])
 # <password>
 # Password validation
