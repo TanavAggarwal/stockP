@@ -31,7 +31,7 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-uri = os.environ['MONGODB_URI']
+DATABASE_URL = os.environ['MONGODB_URI']
 
 # Application definition
 
