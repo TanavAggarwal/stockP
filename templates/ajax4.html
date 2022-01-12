@@ -1,0 +1,17 @@
+<!--<script>
+    $("#btnchart").click(function(){
+        let csr = $("input[name=csrfmiddlewaretoken]").val();
+        let hdict = "{{ hdata }}"
+        mydata = {hdict:hdict, csrfmiddlewaretoken:csr};
+        console.log('Clickedd');
+        $.ajax({
+            url: "{% url 'mfh_charts' %}",
+            method: "POST",
+            data: mydata,
+            dataType: "json",
+            success: function(data){
+                console.log("Successss");
+            },
+        });
+    });
+</script>-->

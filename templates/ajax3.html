@@ -1,0 +1,47 @@
+<script>
+    $("#btnadd").click(function(){
+        //console.log("Add Clicked");
+        output = "";
+        let sch = $("#schid").val();
+        let amt = $("#invamt").val();
+        let ut = $("#iunit").val();
+        let csr = $("input[name=csrfmiddlewaretoken]").val();
+        console.log(sch);
+        mydata = {schemeId:sch, invAmt:amt, units:ut, csrfmiddlewaretoken:csr};
+        $.ajax({
+            url: "{% url 'save2' %}",
+            method: "POST",
+            data: mydata,
+            dataType: "json",
+            success: function(data){
+                x = data.nhd
+                ns = x['schemeId']
+                nc = x['schemeCd']
+                nu = x['units']
+                na = x['invAmt']
+                navs = x['nav']
+                let pl = 0;
+                let tam = 0;
+                for (let i = 0; i < ns.length; i++) {
+                    pl += (navs[i]*nu[i] - na[i]);
+                    tam+=na[i]
+                }
+                let plp = 0
+                if(tam!=0) plp= pl*100/tam
+                if(data.status == 1){
+                    for(i=0; i<ns.length; i++){
+                        output += "<tr><td>" + nc[i] + "</td><td>" + ns[i] + "</td><td>" + na[i] + "</td><td>" + nu[i] + "</td><td>" + navs[i] + "</td><td>" + (navs[i]*nu[i]) + "</td><td>" + (navs[i]*nu[i] - na[i]) + "</td><td>" + ((navs[i]*nu[i] - na[i])*100/na[i]) + "</td></tr>";
+                    }
+                    $("#tbody").html(output);
+                    $("#plt").html(pl);
+                    $("#pltp").html(plp);
+                    $("form")[0].reset();
+                    console.log("Data Added!");
+                }
+                else if(data.status == 0){
+                    console.log("Data Not Saved!");
+                }
+            },
+        });
+    });
+</script>

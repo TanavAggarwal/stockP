@@ -1,0 +1,17 @@
+<!--<script>
+    $("#btnpredict").click(function(){
+        let sym = $("#predid").val();
+        let csr = $("input[name=csrfmiddlewaretoken]").val();
+        mydata = {symbol:sym, csrfmiddlewaretoken:csr};
+        console.log(sym);
+        $.ajax({
+            url: "{% url 'predictor' %}",
+            method: "POST",
+            data: mydata,
+            dataType: "json",
+            success: function(data){
+                console.log("Success");
+            },
+        });
+    });
+</script>-->
