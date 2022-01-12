@@ -12,8 +12,8 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 import os
-import dj_database_url
-import django_heroku
+#import dj_database_url
+#import django_heroku dependency error dateutil version
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'ctlbq7wlmj_9szqe6bf*&$_#%g(wuaf-la5&0j6*-^7^tbu^+5'
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -118,6 +118,7 @@ DATABASES = {
         }
     }
 }
+DATABASE_URL = os.environ['MONGODB_URI']
 #DATABASES['default'] = dj_database_url.config(default=os.environ['MONGODB_URI'])
 # <password>
 # Password validation
@@ -161,6 +162,4 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
-
-django_heroku.settings(locals())
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticassets')
