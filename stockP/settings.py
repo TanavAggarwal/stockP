@@ -108,7 +108,7 @@ DATABASES = {
         'ENGINE': 'djongo',
         'NAME': 'database1',
         'CLIENT': {
-            'host': 'mongodb://tanav_admin:tanav_admin@cluster0.5rbhy.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
+            'host': 'mongodb+srv://tanav_admin:tanav_admin@cluster0.5rbhy.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
             "username": 'tanav_admin',
             "password": 'tanav_admin',
             "authMechanism": "SCRAM-SHA-1",
