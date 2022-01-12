@@ -116,7 +116,7 @@ DATABASES = {
         }
     }
 }
-DATABASES['default'] = dj_database_url.config(default=os.environ['DATABASE_URL'])
+DATABASES['default'] = dj_database_url.config(default=os.environ['MONGODB_URI'])
 # <password>
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
