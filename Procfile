@@ -1,1 +1,1 @@
-web: gunicorn prtf.wsgi --log-file -
+web: gunicorn stockP.wsgi --log-file -
