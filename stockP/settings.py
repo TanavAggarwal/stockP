@@ -31,8 +31,6 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-DATABASE_URL = os.environ['MONGODB_URI']
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -103,6 +101,7 @@ DATABASES = {
         }
     }
 }
+#DATABASE_URL = os.environ['MONGODB_URI']
 #DATABASES['default'] = dj_database_url.config(default=os.environ['MONGODB_URI'])
 # <password>
 # Password validation
@@ -148,4 +147,4 @@ STATICFILES_DIRS = [
 ]
 #STATIC_ROOT = os.path.join(BASE_DIR, 'staticassets')
 
-django_on_heroku.settings(locals(), databases=False)
+django_on_heroku.settings(locals())
