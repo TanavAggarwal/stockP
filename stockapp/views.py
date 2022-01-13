@@ -42,7 +42,7 @@ def index(request):
     user = request.user
     h = Holdings.objects.get(usid=user.id)
 
-    #Nseo = Nse()
+    Nseo = Nse()
     holdings_size = int(len(h.data.get('symbol', [])))
     h_sym = h.data.get('symbol', [])
     h_qty = h.data.get('net_qty', [])
@@ -56,8 +56,8 @@ def index(request):
         pl_prcnt = 0
     else:
         pl_prcnt = pl_total * 100.0 / sum(h_ov)
-    nifty_lp = 18200 #Nseo.get_index_quote("nifty 50")['lastPrice']
-    niftybank_lp = 39000 #Nseo.get_index_quote("nifty bank")['lastPrice']
+    nifty_lp = Nseo.get_index_quote("nifty 50")['lastPrice']
+    niftybank_lp = Nseo.get_index_quote("nifty bank")['lastPrice']
     g = Graphs.objects.get(usid=user.id)
     graph1 = g.g1
     graph2 = g.g2
