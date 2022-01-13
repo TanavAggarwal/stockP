@@ -28,7 +28,7 @@ def login(request):
         user = auth.authenticate(username=email, password=password)
         if user is not None:
             auth.login(request, user)
-            return redirect('index')
+            return redirect('mfunds')
         else:
             messages.info(request, 'Invalid Credentials')
             return redirect('login')
