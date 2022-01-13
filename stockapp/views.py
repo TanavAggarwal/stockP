@@ -28,7 +28,7 @@ def login(request):
         user = auth.authenticate(username=email, password=password)
         if user is not None:
             auth.login(request, user)
-            return redirect('mfunds')
+            return redirect('index')
         else:
             messages.info(request, 'Invalid Credentials')
             return redirect('login')
@@ -37,8 +37,8 @@ def login(request):
 
 
 def index(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
+    #if not request.user.is_authenticated:
+    #    return redirect('login')
     user = request.user
     h = Holdings.objects.get(usid=user.id)
 
