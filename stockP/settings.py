@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 import os
 #import dj_database_url
-#import django_heroku dependency error dateutil version
+import django_on_heroku
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = "ctlbq7wlmj_9szqe6bf*&$_#%g(wuaf-la5&0j6*-^7^tbu^+5"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -91,22 +91,6 @@ WSGI_APPLICATION = 'stockP.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-'''
-DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        # 'NAME': BASE_DIR / 'db.sqlite3',
-        "CLIENT": {
-            "name": 'database1',
-            "host": 'mongodb+srv://tanav_admin:<password>@cluster0.5rbhy.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
-            "username": 'tanav_admin',
-            "password": 'tanav_admin',
-            "authMechanism": "SCRAM-SHA-1",
-        },
-    }
-}
-'''
-
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
@@ -162,4 +146,6 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticassets')
+#STATIC_ROOT = os.path.join(BASE_DIR, 'staticassets')
+
+django_on_heroku.settings(locals(), databases=False)
