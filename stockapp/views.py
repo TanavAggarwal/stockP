@@ -297,10 +297,12 @@ def charts(request):
 
 
 def predictor(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     data = ""
     if request.method == "POST":
         sym = str(request.POST.get('symbol'))
-        Nseo = Nse()
+        #Nseo = Nse()
         end = dt.date.today()
         start = end - dt.timedelta(days=300)
         if sym == "NIFTY":
@@ -308,11 +310,11 @@ def predictor(request):
         elif sym == "BANKNIFTY":
             sym = "^NSEBANK"
         else:
-            if Nseo.is_valid_code(sym):
-                sym = sym + ".BSE"
-            else:
-                messages.info(request, 'Invalid Symbol!')
-                return render(request, 'predictor.html', {'graph': data})
+            #if Nseo.is_valid_code(sym):
+            #    sym = sym + ".BSE"
+            #else:
+            messages.info(request, 'Invalid Symbol!')
+            return render(request, 'predictor.html', {'graph': data})
         # df = web.DataReader(sym, 'yahoo', start, end)
         df = web.DataReader(sym, "av-daily", start=start,
                             end=end, api_key='CT48RJJ2SKTGSNT4')
@@ -380,6 +382,8 @@ def refresh_funds(request):
 
 
 def mfunds(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     user = request.user
     h = Holdings.objects.get(usid=user.id)
     #Nseo = Nse()
@@ -411,6 +415,8 @@ def mfunds(request):
 
 
 def mfholding(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     user = request.user
     h = Holdings.objects.get(usid=user.id)
     holdings_size = int(len(h.data2.get('schemeId', [])))
