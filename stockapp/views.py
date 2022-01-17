@@ -70,7 +70,6 @@ def save_data(request):
 
     if request.method == 'POST':
         sym = str(request.POST['symbol'])
-        sym = sym.upper()
         rp_qty = str(request.POST['qty'])
         rp_price = str(request.POST['price'])
         rp_sector = str(request.POST['sector'])
