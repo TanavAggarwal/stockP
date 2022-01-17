@@ -70,6 +70,7 @@ def save_data(request):
 
     if request.method == 'POST':
         sym = str(request.POST['symbol'])
+        sym = sym.upper()
         rp_qty = str(request.POST['qty'])
         rp_price = str(request.POST['price'])
         rp_sector = str(request.POST['sector'])
@@ -102,8 +103,12 @@ def save_data(request):
                     'avg_price', []) + [int(request.POST['price'])]
                 h.data['sector'] = h.data.get(
                     'sector', []) + [int(request.POST['sector'])]
+                URLst = 'https://groww.in/v1/api/stocks_data/v1/accord_points/exchange/NSE/segment/CASH/latest_prices_ohlc/' + sym
+                r3 = requests.get(URLst)
+                if r3.ok: stltp = r3.json()['ltp']
+                else : stltp = 0
                 h.data['ltp'] = h.data.get(
-                    'ltp', []) + [int(Nseo.get_quote(sym)['lastPrice'])]
+                    'ltp', []) + [int(stltp)]
                 h.save()
 
             nhd = h.data
@@ -210,7 +215,7 @@ def refresh_charts(request):
         return redirect('login')
     user = request.user
     h = Holdings.objects.get(usid=user.id)
-    Nseo = Nse()
+    #Nseo = Nse()
     holdings_size = int(len(h.data.get('symbol', [])))
     h_sym = h.data.get('symbol', [])
     h_qty = h.data.get('net_qty', [])
@@ -218,11 +223,15 @@ def refresh_charts(request):
     h_sector = h.data.get('sector', [])
     h_ltp = []
     for i in range(holdings_size):
-        h_ltp.append(Nseo.get_quote(h_sym[i])['lastPrice'])
+        URLst = 'https://groww.in/v1/api/stocks_data/v1/accord_points/exchange/NSE/segment/CASH/latest_prices_ohlc/' + h_sym[i]
+        r3 = requests.get(URLst)
+        if r3.ok: stltp = r3.json()['ltp']
+        else : stltp = 0
+        h_ltp.append(int(stltp))
+        #h_ltp.append(Nseo.get_quote(h_sym[i])['lastPrice'])
     h.data['ltp'] = h_ltp
     h.save()
-    # nse_eq(h_sym[i])['priceInfo']['lastPrice']
-    # Nseo.get_quote(h_sym[i])['lastPrice']
+    
     h_ov = [a * b for a, b in zip(h_qty, h_price)]
     h_cv = [a * b for a, b in zip(h_qty, h_ltp)]
     h_pl = [a - b for a, b in zip(h_cv, h_ov)]
