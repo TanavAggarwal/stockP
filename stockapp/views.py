@@ -310,7 +310,7 @@ def predictor(request):
     data = ""
     if request.method == "POST":
         sym = str(request.POST.get('symbol'))
-        #Nseo = Nse()
+        Nseo = Nse()
         end = dt.date.today()
         start = end - dt.timedelta(days=300)
         if sym == "NIFTY":
@@ -318,9 +318,9 @@ def predictor(request):
         elif sym == "BANKNIFTY":
             sym = "^NSEBANK"
         else:
-            #if Nseo.is_valid_code(sym):
-            #    sym = sym + ".BSE"
-            #else:
+            if Nseo.is_valid_code(sym):
+                sym = sym + ".BSE"
+            else:
             messages.info(request, 'Invalid Symbol!')
             return render(request, 'predictor.html', {'graph': data})
         # df = web.DataReader(sym, 'yahoo', start, end)
