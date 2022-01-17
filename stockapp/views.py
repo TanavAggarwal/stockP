@@ -226,7 +226,7 @@ def refresh_charts(request):
         r3 = requests.get(URLst)
         if r3.ok: stltp = r3.json()['ltp']
         else : stltp = 0
-        h_ltp.append(int(stltp))
+        h_ltp.append(stltp)
         #h_ltp.append(Nseo.get_quote(h_sym[i])['lastPrice'])
     h.data['ltp'] = h_ltp
     h.save()
