@@ -313,16 +313,11 @@ def predictor(request):
         Nseo = Nse()
         end = dt.date.today()
         start = end - dt.timedelta(days=300)
-        if sym == "NIFTY":
-            sym = "^NSEI"
-        elif sym == "BANKNIFTY":
-            sym = "^NSEBANK"
+        if Nseo.is_valid_code(sym):
+            sym = sym + ".BSE"
         else:
-            if Nseo.is_valid_code(sym):
-                sym = sym + ".BSE"
-            else:
-                messages.info(request, 'Invalid Symbol!')
-                return render(request, 'predictor.html', {'graph': data})
+            messages.info(request, 'Invalid Symbol!')
+            return render(request, 'predictor.html', {'graph': data})
         # df = web.DataReader(sym, 'yahoo', start, end)
         df = web.DataReader(sym, "av-daily", start=start,
                             end=end, api_key='CT48RJJ2SKTGSNT4')
