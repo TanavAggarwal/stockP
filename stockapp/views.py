@@ -147,7 +147,7 @@ def index(request):
     h_cv = [float("{:.2f}".format(a * b)) for a, b in zip(h_qty, h_ltp)]
     h_pl = [float("{:.2f}".format(a - b)) for a, b in zip(h_cv, h_ov)]
     h_plp = [float("{:.2f}".format(a * 100 / b)) for a, b in zip(h_pl, h_ov)]
-    pl_total = sum(h_pl)
+    pl_total = float("{:.2f}".format(sum(h_pl)))
     if sum(h_ov) == 0:
         pl_prcnt = 0
     else:
