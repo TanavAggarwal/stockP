@@ -1,6 +1,11 @@
 <script>
     $("#btnadd").click(function(){
         //console.log("Add Clicked");
+        var btn = $(this);
+        btn.prop('disabled', true);
+        setTimeout(function(){
+            btn.prop('disabled', false);
+        },5000);
         output = "";
         let sch = $("#schid").val();
         let amt = $("#invamt").val();
@@ -14,32 +19,36 @@
             data: mydata,
             dataType: "json",
             success: function(data){
-                x = data.nhd
-                ns = x['schemeId']
-                nc = x['schemeCd']
-                nu = x['units']
-                na = x['invAmt']
-                navs = x['nav']
-                let pl = 0;
-                let tam = 0;
-                for (let i = 0; i < ns.length; i++) {
-                    pl += (navs[i]*nu[i] - na[i]);
-                    tam+=na[i]
-                }
-                let plp = 0
-                if(tam!=0) plp= pl*100/tam
                 if(data.status == 1){
+                    window.location.href = "/mfunds.html";
+                    /*x = data.nhd
+                    ns = x['schemeId']
+                    nc = x['schemeCd']
+                    nu = x['units']
+                    na = x['invAmt']
+                    navs = x['nav']
+                    let pl = 0;
+                    let tam = 0;
+                    for (let i = 0; i < ns.length; i++) {
+                        pl += (navs[i]*nu[i] - na[i]);
+                        tam+=na[i]
+                    }
+                    let plp = 0
+                    if(tam!=0) plp= pl*100/tam
                     for(i=0; i<ns.length; i++){
                         output += "<tr><td>" + nc[i] + "</td><td>" + ns[i] + "</td><td>" + na[i] + "</td><td>" + nu[i] + "</td><td>" + navs[i] + "</td><td>" + (navs[i]*nu[i]) + "</td><td>" + (navs[i]*nu[i] - na[i]) + "</td><td>" + ((navs[i]*nu[i] - na[i])*100/na[i]) + "</td></tr>";
                     }
                     $("#tbody").html(output);
+                    $("#tamt").html(tam);
+                    $("#tcv").html(tam+pl);
                     $("#plt").html(pl);
                     $("#pltp").html(plp);
                     $("form")[0].reset();
-                    console.log("Data Added!");
+                    $("#drpmsgdivf").load(location.href+" #drpmsgdivf>*","");
+                    console.log("Data Added!");*/
                 }
                 else if(data.status == 0){
-                    console.log("Data Not Saved!");
+                    $("#drpmsgdivf").load(location.href+" #drpmsgdivf>*","");
                 }
             },
         });
