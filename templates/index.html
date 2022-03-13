@@ -10,12 +10,13 @@
         <meta name="author" content="" />
         <title>Dashboard - Admin</title>
         <link href="{% static 'css/styles.css' %}" rel="stylesheet" />
+        <link href="https://unpkg.com/bootstrap-table@1.19.1/dist/bootstrap-table.min.css" rel="stylesheet">
         <link href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css" rel="stylesheet" crossorigin="anonymous" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js" crossorigin="anonymous"></script>
     </head>
     <body class="sb-nav-fixed">
         <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-            <a class="navbar-brand" href="/index.html">{{user.first_name}}'s Portfolio</a>
+            <a class="navbar-brand" href="/index.html">StockPF Dashboard</a>
             <button class="btn btn-link btn-sm order-1 order-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button>
             <!-- Navbar Search-->
             <!--form class="d-none d-md-inline-block form-inline ml-auto mr-0 mr-md-3 my-2 my-md-0">
@@ -25,7 +26,7 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="userDropdown" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
-                        <a class="dropdown-item" href="#">Settings</a>
+                        <a class="dropdown-item" href="/settings.html">Settings</a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="/logout.html">Logout</a>
                     </div>
@@ -40,17 +41,13 @@
                             <div class="sb-sidenav-menu-heading">Core</div>
                             <a class="nav-link" href="/index.html">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
-                                Dashboard
+                                Equity
                             </a>
                             <a class="nav-link" href="/mfunds.html">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                                 Mutual Funds
                             </a>
                             <div class="sb-sidenav-menu-heading">Addons</div>
-                            <a class="nav-link" href="/charts.html">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
-                                Charts
-                            </a>
                             <a class="nav-link" href="/predictor.html">
                                 <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
                                 Price Predictor
@@ -63,7 +60,7 @@
                     </div>
                     <div class="sb-sidenav-footer">
                         <div class="small">Logged in as:</div>
-                        {{user.email}}
+                        {{user.first_name}} {{user.last_name}}
                     </div>
                 </nav>
             </div>
@@ -74,6 +71,13 @@
                         <ol class="breadcrumb mb-4">
                             <li class="breadcrumb-item active">Dashboard</li>
                         </ol>
+                        {% for message in messages %}
+                            <div class="toast notification bg-{{ message.tags }}" role="alert" aria-live="assertive" aria-atomic="true" data-delay="3000">
+                                <div class="toast-body">
+                                    <b>{{message}}</b>
+                                </div>
+                            </div>
+                        {% endfor %}
                         <div class="row">
                             <div class="col-xl-3 col-md-6">
                                 <div class="card bg-primary text-white mb-4">
@@ -86,9 +90,9 @@
                             </div>
                             <div class="col-xl-3 col-md-6">
                                 <div class="card bg-warning text-white mb-4">
-                                    <div class="card-body">{{niftybank_lp}}</div>
+                                    <div class="card-body">{{sensex_lp}}</div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
-                                        <a class="small text-white stretched-link" href="#">Nifty Bank</a>
+                                        <a class="small text-white stretched-link" href="#">Sensex</a>
                                         <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                                     </div>
                                 </div>
@@ -132,17 +136,18 @@
                                 </div>
                             </div>
                         </div>
+
                         <div class="card mb-4">
                             <div class="card-header">
                                 <i class="fas fa-table mr-1"></i>
                                 <b>Holdings</b>
 
-                                <div class="btn-group dropdown" style="display:inline-block" title="Add/Remove stocks">
-                                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <div class="btn-group dropdown" style="display:inline-block;" title="Add/Remove stocks">
+                                    <button type="button" class="btn btn-primary" style="font-size:0.8rem; border-top-right-radius:0.25rem; border-bottom-right-radius:0.25rem;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <i class="fas fa-plus-circle fa-2x"></i>
                                     </button>
 
-                                    <form class="dropdown-menu p-4" method="POST">
+                                    <form class="dropdown-menu p-3" method="POST">
                                         {% csrf_token %}
                                         <div class="form-group">
                                             <label for="exampleDropdownFormEmail2">Symbol</label>
@@ -172,20 +177,37 @@
                                             </select>
                                         </div>
                                         <div class="form-group">
-                                            <input type="button" id="btnadd" class="btn btn-primary" value="Add" />
+                                            <input type="button" id="btnadd" class="btn btn-primary" value="Add" name="AddStock" />
                                         </div>
-                                        <div class="form-group">
+                                        <div class="form-group" id="drpmsgdiv" style="color:red; margin-bottom:0px;">
                                             {% for message in messages %}
-                                            <label class="small mb-1" for="errorMessage">{{message}}</label>
+                                            {% if message.tags == 'info' %}
+                                            <label style="margin-bottom:0px;" class="small" for="errorMessage" id="drpmsg" data-delay="3000">
+                                                {{message}}
+                                            </label>
+                                            {% endif %}
                                             {% endfor %}
                                         </div>
                                     </form>
                                 </div>
 
                                 <div style="display: inline-block" class="float-right" title="Refresh Data and Charts">
-                                    <a href="\refresh_charts.html" class="btn btn-primary btn-large">
+                                    <a href="\refresh_charts.html" class="btn btn-file btn-large">
                                         <i class="fa fa-retweet"></i>
                                     </a>
+                                </div>
+
+                                <div class="btn-group dropdown dropleft float-right" style="display:inline-block; margin-right: 10px" title="Upload CSV file">
+                                    <button type="button" class="btn btn-file" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fas fa-upload"></i>
+                                    </button>
+                                    <form class="dropdown-menu" method="POST" enctype="multipart/form-data" id="fileForm">
+                                        {% csrf_token %}
+                                        <input id="fileChoose" type="file" accept="text/csv" name="stockFile" />
+                                        <input type="submit" value="Upload" name="AddFile" id="fileSubmit"/>
+                                        <div> Format : 4 Columns </div>
+                                        <div> Symbol, Quantity, Buy Price, Sector(Opt.) </div>
+                                    </form>
                                 </div>
                             </div>
 
@@ -194,24 +216,26 @@
                                     <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                         <thead>
                                             <tr>
-                                                <th>Symbol</th>
-                                                <th>Net Qty</th>
-                                                <th>Avg Price</th>
-                                                <th>Open Value</th>
-                                                <th>LTP</th>
-                                                <th>Current Value</th>
-                                                <th>Overall P/L</th>
+                                                <th data-field="thsym">Symbol</th>
+                                                <th data-field="thqty">Net Qty</th>
+                                                <th data-field="thabp">Avg Price</th>
+                                                <th data-field="thcmp">CMP</th>
+                                                <th data-field="thcvl">Current Value</th>
+                                                <th data-field="thopl">Overall P/L</th>
+                                                <th data-field="thplp">P/L %</th>
+                                                <th data-field="thsec">Sector</th>
                                             </tr>
                                         </thead>
                                         <tfoot>
                                             <tr>
-                                                <th>Symbol</th>
-                                                <th>Net Qty</th>
-                                                <th>Avg Price</th>
-                                                <th>Open Value</th>
-                                                <th>LTP</th>
-                                                <th>Current Value</th>
-                                                <th>Overall P/L</th>
+                                                <th data-field="thsym">Symbol</th>
+                                                <th data-field="thqty">Net Qty</th>
+                                                <th data-field="thabp">Avg Price</th>
+                                                <th data-field="thcmp">CMP</th>
+                                                <th data-field="thcvl">Current Value</th>
+                                                <th data-field="thopl">Overall P/L</th>
+                                                <th data-field="thplp">P/L %</th>
+                                                <th data-field="thsec">Sector</th>
                                             </tr>
                                         </tfoot>
                                         <tbody id="tbody">
@@ -220,10 +244,11 @@
                                                     <td>{{ h_sym|index:ind }}</td>
                                                     <td>{{ h_qty|index:ind }}</td>
                                                     <td>{{ h_price|index:ind }}</td>
-                                                    <td>{{ h_ov|index:ind }}</td>
                                                     <td>{{ h_ltp|index:ind }}</td>
                                                     <td>{{ h_cv|index:ind }}</td>
                                                     <td>{{ h_pl|index:ind }}</td>
+                                                    <td>{{ h_plp|index:ind }}</td>
+                                                    <td>{{ h_sector|index:ind }}</td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
@@ -236,7 +261,7 @@
                 <footer class="py-4 bg-light mt-auto">
                     <div class="container-fluid">
                         <div class="d-flex align-items-center justify-content-between small">
-                            <div class="text-muted">Copyright &copy; Portfolio Tracker 2021</div>
+                            <div class="text-muted">Copyright &copy; StockPF 2022</div>
                             <div>
                                 <a href="#">Privacy Policy</a>
                                 &middot;
@@ -250,10 +275,30 @@
         <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/bootstrap-table@1.19.1/dist/bootstrap-table.min.js"></script>
         <script src="{% static 'js/scripts.js' %}"></script>
         <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
         <script src="{% static 'assets/demo/chart-area-demo.js' %}"></script>
         <script src="{% static 'assets/demo/chart-bar-demo.js' %}"></script>-->
+        {% if messages %}
+            <script>
+            {% for message in messages %}
+                $(document).ready(function () {
+                    $('.toast').toast('show');
+                });
+            {% endfor %}
+            </script>
+        {% endif %}
+        <script>
+        $(document).ready(function () {
+            $('#dataTable').dataTable({
+                "bPaginate": false
+            });
+            $('#fileForm').submit(function(){
+                $('#fileSubmit').prop('disabled', true);
+            });
+        });
+        </script>
         <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js" crossorigin="anonymous"></script>
         <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js" crossorigin="anonymous"></script>
         <script src="{% static 'assets/demo/datatables-demo.js' %}"></script>
