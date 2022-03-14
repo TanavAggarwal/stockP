@@ -590,7 +590,12 @@ def mfholding(request):
     h_unt = h.data2.get('units', [])
     h_nav = h.data2.get('nav', [])
     h_cv = [float("{:.2f}".format(a * b)) for a, b in zip(h_unt, h_nav)]
-
+    
+    if(len(h_sch) == 0):
+        hldgs = {}
+        data1 = "No Data! Add Mutual Funds in your portfolio for analysis!"
+        return render(request, 'mfholding.html', {'hdata': hldgs, 'graph1': data1})
+    
     URL2 = "https://www.amfiindia.com/spages/NAVOpen.txt"
     try:
         r2 = requests.get(URL2, timeout=10).text
