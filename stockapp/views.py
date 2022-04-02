@@ -88,7 +88,7 @@ def index(request):
                     try:
                         fsec = filecsv.iloc[index, 3]
                         fsec = fsec.capitalize()
-                        sectors = ["Finance", "It & Digital", "Pharma", "Consumer",
+                        sectors = ["Finance", "It", "Pharma", "Consumer",
                                    "Infra", "Auto", "Power", "Chemical", "Other"]
                         if(pd.isnull(fsec) or fsec == '' or (fsec not in sectors)):
                             if fsym in h.data.get('symbol', []):
@@ -139,7 +139,7 @@ def index(request):
     h_ov = [float('{:.2f}'.format(a * b)) for a, b in zip(h_qty, h_price)]
     h_ltp = h.data.get('ltp', [])
     h_sect = h.data.get('sector', [])
-    sectors = ["Finance", "IT & Digital", "Pharma", "Consumer",
+    sectors = ["Finance", "It", "Pharma", "Consumer",
                "Infra", "Auto", "Power", "Chemical", "Other"]
     h_sector = []
     for i in range(0, holdings_size):
@@ -400,7 +400,7 @@ def refresh_charts(request):
     h_cv = [a * b for a, b in zip(h_qty, h_ltp)]
     h_pl = [a - b for a, b in zip(h_cv, h_ov)]
 
-    sectors = ["Finance", "IT & Digital", "Pharma", "Consumer",
+    sectors = ["Finance", "It", "Pharma", "Consumer",
                "Infra", "Auto", "Power", "Chemical", "Other"]
     sector_ov = [0] * 9
     sector_cv = [0] * 9
