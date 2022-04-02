@@ -88,7 +88,7 @@ def index(request):
                     try:
                         fsec = filecsv.iloc[index, 3]
                         fsec = fsec.capitalize()
-                        sectors = ["Finance", "IT & Digital", "Pharma", "Consumer",
+                        sectors = ["Finance", "It & Digital", "Pharma", "Consumer",
                                    "Infra", "Auto", "Power", "Chemical", "Other"]
                         if(pd.isnull(fsec) or fsec == '' or (fsec not in sectors)):
                             if fsym in h.data.get('symbol', []):
