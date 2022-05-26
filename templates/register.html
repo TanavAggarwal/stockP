@@ -22,7 +22,18 @@
                                 <div class="card shadow-lg border-0 rounded-lg mt-5">
                                     <div class="card-header"><h3 class="text-center font-weight-light my-4">Create Account</h3></div>
                                     <div class="card-body">
-                                        <form method="POST">
+                                        <div class="form-group" id="email_div" style="display: ;">
+                                            <label class="small mb-1" for="email">Email</label>
+                                            <input class="form-control py-4" name="email" id="email" type="email" aria-describedby="emailHelp" placeholder="Enter email address" />
+                                            <button id="ajax_send_otp" class="btn btn-primary btn-sm">Send OTP</button>
+                                        </div>
+                                        <div class="form-group" id="otp_div" style="display: none;">
+                                            <label class="small mb-1" for="email">OTP</label>
+                                            <input class="form-control py-4" name="otp" id="otp" type="text" placeholder="otp" />
+                                            <button id="verify_otp" class="btn btn-primary btn-sm">Verify</button>
+                                        </div>
+                                        <div id="verify_text_div" class="form-group small mb-1"></div>
+                                        <form method="POST" id="form_reg">
                                             {% csrf_token %}
                                             <div class="form-row">
                                                 <div class="col-md-6">
@@ -38,10 +49,20 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="form-group">
-                                                <label class="small mb-1" for="inputEmailAddress">Email</label>
-                                                <input class="form-control py-4" name="email" id="inputEmailAddress" type="email" aria-describedby="emailHelp" placeholder="Enter email address" />
+                                            <div class="form-group" style="display: none;">
+                                                <label class="small mb-1" for="emailf">Email</label>
+                                                <input class="form-control py-4" name="emailf" id="emailf" type="email" aria-describedby="emailHelp" placeholder="Enter email address" />
                                             </div>
+                                            <!-- <div class="form-group" id="email_div" style="display: ;">
+                                                <label class="small mb-1" for="email">Email</label>
+                                                <input class="form-control py-4" name="email" id="email" type="email" aria-describedby="emailHelp" placeholder="Enter email address" />
+                                                <button id="ajax_send_otp" class="btn btn-primary btn-sm">Send OTP</button>
+                                            </div>
+                                            <div class="form-group" id="otp_div" style="display: none;">
+                                                <label class="small mb-1" for="email">OTP</label>
+                                                <input class="form-control py-4" name="otp" id="otp" type="text" placeholder="otp" />
+                                                <button id="verify_otp" class="btn btn-primary btn-sm">Verify</button>
+                                            </div> -->
                                             <div class="form-row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
@@ -57,7 +78,7 @@
                                                 </div>
                                             </div>
                                             <div class="form-group mt-4 mb-0">
-                                                <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+                                                <button type="submit" class="btn btn-primary btn-block" disabled id="createAcc">Create Account</button>
                                             </div>
                                             <div class="form-group">
                                                 {% for message in messages %}
@@ -90,8 +111,58 @@
                 </footer>
             </div>
         </div>
-        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script>
+            $('#form_reg').on('keypress', function(e) {
+                return e.which !== 13;
+            });
+
+            var otp_from_back="";
+
+            $("#ajax_send_otp").click(function(){
+                let email = $("#email").val();
+                document.getElementById("emailf").value = email;
+                document.getElementById("email_div").style.display='none';
+
+                //let csr = $("input[name=csrfmiddlewaretoken]").val();
+                let csr = "{{csrf_token}}"
+                mydata = {email:email, csrfmiddlewaretoken:csr};
+                console.log(mydata);
+                $.ajax({
+                    url: "{% url 'send_otp' %}",
+                    method: "POST",
+                    data: mydata,
+                    dataType: "json",
+                    success: function(data){
+                        if(data.status == 1){
+                            otp_from_back = data.otp;
+                            document.getElementById("otp_div").style.display='block';
+                        }
+                        if(data.status == 0){
+                            document.getElementById("verify_text_div").style.color="green";
+                            document.getElementById("verify_text_div").innerHTML="Email Already Registered! Proceed to Login!"
+                        }
+                    },
+                });
+            });
+
+            $("#verify_otp").click(function(){
+                let user_otp = String($("#otp").val());
+                if (user_otp==otp_from_back){
+                    document.getElementById("verify_text_div").style.color="green";
+                    document.getElementById("verify_text_div").innerHTML="OTP Verified";
+                    document.getElementById("createAcc").removeAttribute("disabled");
+                }
+                else{
+                    document.getElementById("verify_text_div").style.color="red";
+                    document.getElementById("verify_text_div").innerHTML="Try Again!!";
+                    document.getElementById("otp_div").style.display="none";
+                    document.getElementById("email_div").style.display="block";
+                }
+            });
+
+        </script>
         <script src="{% static 'js/scripts.js' %}"></script>
     </body>
 </html>
