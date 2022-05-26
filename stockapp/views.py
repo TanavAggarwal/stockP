@@ -19,6 +19,9 @@ from sklearn.preprocessing import MinMaxScaler
 import os
 import requests
 from mftool import Mftool
+from django.core.mail import send_mail
+import math
+import random
 
 
 def login(request):
@@ -35,6 +38,27 @@ def login(request):
     else:
         return render(request, 'login.html', {})
 
+ 
+def generateOTP():
+    digits = "0123456789"
+    OTP = ""
+    for i in range(4):
+        OTP += digits[math.floor(random.random() * 10)]
+    return OTP
+
+
+def send_otp(request):
+    email = str(request.POST["email"])
+    if User.objects.filter(email=email).exists():
+        #print("email found!")
+        return JsonResponse({'status': 0})
+    o = generateOTP()
+    #print("OTP :", o)
+    htmlgen = '<p>Your OTP is <strong>' + o + '</strong></p>'
+    send_mail('StockPF OTP request', o, '<your gmail id>', [
+              email], fail_silently=False, html_message=htmlgen)
+    #print("OTP sent")
+    return JsonResponse({'otp': o, 'status': 1})
 
 def index(request):
     if not request.user.is_authenticated:
@@ -323,10 +347,14 @@ def register(request):
     if request.method == 'POST':
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
-        email = request.POST['email']
+        email = request.POST['emailf']
         password1 = request.POST['password1']
         password2 = request.POST['password2']
-
+        
+        if first_name == '' or last_name == '' or email == '' or password1 == '':
+            messages.info(request, 'Fill all fields!')
+            return redirect('register')
+        
         if password1 == password2:
             if User.objects.filter(email=email).exists():
                 messages.info(
@@ -754,16 +782,14 @@ def settings(request):
 #    return JsonResponse({'status': 1})
 
 
-# UI improvements
+# UI chart improvements, MF name while typing, ML model improve
 # Graph sizes relative to screen size / Make graph using data in JS
 # Interactive graphs using mpld3/plotly
 #
 # Settings page contact feedback option
 # Forget Password during login
 #
-# Seperate collection for user meta(request.META) info + phone
-#
-# Modify Login Page as Landing Home Page
+# Seperate db collection for user meta(request.META) info + phone + clicks
 #
 # New Common Dasboard with daily news/movers etc as landing db, seperate equities and mf areas
 #
@@ -773,7 +799,7 @@ def settings(request):
 # Counter for monthly clicks on add-ons for premium
 # Revamp UI, kind of like smallcase
 # Make client side improvements using ajax/js
-# Google Auth and Crawler pe update
+# Google Auth and SEO
 
 
 # Hints:
@@ -782,4 +808,4 @@ def settings(request):
 # Then save models.py , do python manage.py makemigrations stockapp, #python manage.py migrate --fake stockapp zero#, python manage.py migrate stockapp
 # MongoDB login with google 123 gmail
 # For mf holding analysis, used zerodha link found on inspect element network tab fetch/XHR tab .json link on zerodha mf(say kotak emerging) website
-# Using ATOM inbuilt terminal, powershell opens type ->cmd, workon test, python manage.py runserver
+# Using ATOM inbuilt terminal, powershell opens, type ->cmd, workon test, python manage.py runserver
