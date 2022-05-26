@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('', views.login, name='login'),
+    path("send_otp", views.send_otp, name="send_otp"),
     path('settings.html/', views.settings, name='settings'),
     path('index.html/', views.index, name='index'),
     path('save/', views.save_data, name='save'),
