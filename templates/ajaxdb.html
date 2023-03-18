@@ -1,0 +1,78 @@
+<script>
+    $("#btnadd").click(function(){
+        //console.log("Add Clicked");
+        var btn = $(this);
+        btn.prop('disabled', true);
+        setTimeout(function(){
+            btn.prop('disabled', false);
+        },6000);
+        output = "";
+        let sym = $("#symid").val();
+        let nqty = $("#qtyid").val();
+        let aprice = $("#priceid").val();
+        let sec = $("#sectorid").val();
+        let csr = $("input[name=csrfmiddlewaretoken]").val();
+        console.log(sym);
+        mydata = {symbol:sym, qty:nqty, price:aprice, sector:sec, csrfmiddlewaretoken:csr};
+        $.ajax({
+            url: "{% url 'save' %}",
+            method: "POST",
+            data: mydata,
+            dataType: "json",
+            success: function(data){
+                if(data.status == 1){
+                    window.location.href = "/dashb.html";
+                    /*x = data.nhd
+                    ns = x['symbol']
+                    nq = x['net_qty']
+                    np = x['avg_price']
+                    nl = x['ltp']
+                    nst = x['sector']
+                    sectors = ["Finance", "IT & Digital", "Pharma", "Consumer",
+                                "Infra", "Auto", "Power", "Chemical", "Other"]
+                    nsect = [];
+                    for(var i = 0; i < nst.length; i++){
+                        nsect.push(sectors[nst[i]-1]);
+                    }
+                    let pl = 0;
+                    let tam = 0;
+                    for (let i = 0; i < ns.length; i++) {
+                        pl += (nq[i]*(nl[i]-np[i]));
+                        tam+= (nq[i]*np[i])
+                    }
+                    let plp = 0
+                    if(tam!=0) plp= pl*100/tam
+                    tabData = []
+                    for(i=0; i<ns.length; i++){
+                        var dict = {
+                            "thsym" : ns[i],
+                            "thqty" : nq[i],
+                            "thabp" : np[i],
+                            "thcmp" : nl[i],
+                            "thcvl" : (nq[i]*nl[i]),
+                            "thopl" : (nq[i]*nl[i] - nq[i]*np[i]),
+                            "thplp" : (nq[i]*nl[i] - nq[i]*np[i])*100/(nq[i]*np[i]),
+                            "thsec" : nsect[i]
+                        }
+                        tabData.push(dict)
+                    }
+                    //for(i=0; i<ns.length; i++){
+                    //    output += "<tr><td>" + ns[i] + "</td><td>" + nq[i] + "</td><td>" + np[i] + "</td><td>" + nl[i] + "</td><td>" + (nq[i]*nl[i]) + "</td><td>" + (nq[i]*nl[i] - nq[i]*np[i]) + "</td><td>" + (nq[i]*nl[i] - nq[i]*np[i])*100/(nq[i]*np[i]) + "</td><td>" + (nsect[i]) +  "</td></tr>";
+                    //}
+                    //$('#dataTable').bootstrapTable("destroy");
+                    $('#dataTable').bootstrapTable({data: tabData});
+                    $('#dataTable').bootstrapTable('load', tabData);
+                    //$("#tbody").html(output);
+                    $("#plt").html(pl);
+                    $("#pltp").html(plp);
+                    $("form")[0].reset();
+                    $("#drpmsgdiv").load(location.href+" #drpmsgdiv>*","");
+                    console.log("Data Added!");*/
+                }
+                else if(data.status == 0){
+                    $("#drpmsgdiv").load(location.href+" #drpmsgdiv>*","");
+                }
+            },
+        });
+    });
+</script>
