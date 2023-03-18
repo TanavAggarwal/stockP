@@ -18,6 +18,7 @@ urlpatterns = [
     path('refresh_funds.html/', views.refresh_funds, name='refresh_funds'),
     #path('mfh_charts.html/', views.mfh_charts, name='mfh_charts'),
     path('mfunds.html/', views.mfunds, name='mfunds'),
+    path('dashb.html/', views.dashb, name='dashb'),
     path('mfholding.html/', views.mfholding, name='mfholding'),
     path('DelEq.html/', views.deleq, name='DelEq'),
     path('DelMf.html/', views.delmf, name='DelMf'),
