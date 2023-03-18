@@ -15,7 +15,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js" crossorigin="anonymous"></script>
     </head>
     <body class="sb-nav-fixed">
-        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark py-0">
             <a class="navbar-brand" href="/index.html">StockPF Dashboard</a>
             <button class="btn btn-link btn-sm order-1 order-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button>
             <!-- Navbar Search-->
@@ -40,6 +40,10 @@
                         <div class="nav">
                             <div class="sb-sidenav-menu-heading">Core</div>
                             <a class="nav-link" href="/index.html">
+                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                DashBoard
+                            </a>
+                            <a class="nav-link" href="/dashb.html">
                                 <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                                 Equity
                             </a>
@@ -67,10 +71,10 @@
             <div id="layoutSidenav_content">
                 <main>
                     <div class="container-fluid">
-                        <h1 class="mt-4">Dashboard</h1>
-                        <ol class="breadcrumb mb-4">
+                        <h1 class="my-3">Dashboard</h1>
+                        <!-- <ol class="breadcrumb mb-4">
                             <li class="breadcrumb-item active">Dashboard</li>
-                        </ol>
+                        </ol> -->
                         {% for message in messages %}
                             <div class="toast notification bg-{{ message.tags }}" role="alert" aria-live="assertive" aria-atomic="true" data-delay="3000">
                                 <div class="toast-body">
@@ -81,36 +85,36 @@
                         <div class="row">
                             <div class="col-xl-3 col-md-6">
                                 <div class="card bg-primary text-white mb-4">
-                                    <div class="card-body">{{nifty_lp}}</div>
+                                    <div class="card-body">{{prtf_inv}}</div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
-                                        <a class="small text-white stretched-link" href="#">Nifty</a>
+                                        <a class="small text-white stretched-link" href="#">Portfolio Investment</a>
                                         <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-xl-3 col-md-6">
                                 <div class="card bg-warning text-white mb-4">
-                                    <div class="card-body">{{sensex_lp}}</div>
+                                    <div class="card-body">{{prtf_val}}</div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
-                                        <a class="small text-white stretched-link" href="#">Sensex</a>
+                                        <a class="small text-white stretched-link" href="#">Portfolio Value</a>
                                         <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-xl-3 col-md-6">
                                 <div class="card bg-success text-white mb-4">
-                                    <div class="card-body" id="plt">{{pl_total}}</div>
+                                    <div class="card-body" id="plt">{{prtf_pl}}</div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
-                                        <a class="small text-white stretched-link" href="#">Total P/L</a>
+                                        <a class="small text-white stretched-link" href="#">Portfolio P/L</a>
                                         <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-xl-3 col-md-6">
                                 <div class="card bg-danger text-white mb-4">
-                                    <div class="card-body" id="pltp">{{pl_prcnt}}</div>
+                                    <div class="card-body" id="pltp">{{prtf_plp}}</div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
-                                        <a class="small text-white stretched-link" href="#">Total Return(%)</a>
+                                        <a class="small text-white stretched-link" href="#">Portfolio Return(%)</a>
                                         <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                                     </div>
                                 </div>
@@ -123,142 +127,15 @@
                                         <i class="fas fa-chart-pie mr-1"></i>
                                         Sectoral Distribution
                                     </div>
-                                    <div class="card-body"><center>{{ graph1|safe }}</center></div>
+                                    <div class="card-body"><center></center></div>
                                 </div>
                             </div>
                             <div class="col-xl-6">
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <i class="fas fa-chart-bar mr-1"></i>
-                                        Sectoral Profits
-                                    </div>
-                                    <div class="card-body"><center>{{ graph2|safe }}</center></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <i class="fas fa-table mr-1"></i>
-                                <b>Holdings</b>
-
-                                <div class="btn-group dropdown" style="display:inline-block;" title="Add/Remove stocks">
-                                    <button type="button" class="btn btn-primary" style="font-size:0.8rem; border-top-right-radius:0.25rem; border-bottom-right-radius:0.25rem;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fas fa-plus-circle fa-2x"></i>
-                                    </button>
-
-                                    <form class="dropdown-menu p-3" method="POST">
-                                        {% csrf_token %}
-                                        <div class="form-group">
-                                            <label for="exampleDropdownFormEmail2">Symbol</label>
-                                            <input type="text" name="symbol" id="symid" class="form-control" placeholder="SBIN">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Net Qty</label>
-                                            <input type="number" name="qty" id="qtyid" class="form-control" placeholder="10">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Avg Price</label>
-                                            <input type="number" name="price" id="priceid" class="form-control" placeholder="250">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Sector</label>
-                                            <select class="custom-select" name="sector" id="sectorid">
-                                                <option selected>Choose...</option>
-                                                <option value="1">Finance</option>
-                                                <option value="2">IT &amp; Digital</option>
-                                                <option value="3">Pharma</option>
-                                                <option value="4">Consumer</option>
-                                                <option value="5">Infra</option>
-                                                <option value="6">Auto</option>
-                                                <option value="7">Power</option>
-                                                <option value="8">Chemical</option>
-                                                <option value="9">Other</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <input type="button" id="btnadd" class="btn btn-primary" value="Add" name="AddStock" />
-                                        </div>
-                                        <div class="form-group" id="drpmsgdiv" style="color:red; margin-bottom:0px;">
-                                            {% for message in messages %}
-                                            {% if message.tags == 'info' %}
-                                            <label style="margin-bottom:0px;" class="small" for="errorMessage" id="drpmsg" data-delay="3000">
-                                                {{message}}
-                                            </label>
-                                            {% endif %}
-                                            {% endfor %}
-                                        </div>
-                                    </form>
-                                </div>
-
-                                <div style="display: inline-block" class="float-right" title="Refresh Data and Charts">
-                                    <a href="\refresh_charts.html" class="btn btn-file btn-large">
-                                        <i class="fa fa-retweet"></i>
-                                    </a>
-                                </div>
-
-                                <div class="btn-group dropdown dropleft float-right" style="display:inline-block; margin-right: 10px" title="Upload CSV file">
-                                    <button type="button" class="btn btn-file" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fas fa-upload"></i>
-                                    </button>
-                                    <form class="dropdown-menu" method="POST" enctype="multipart/form-data" id="fileForm">
-                                        {% csrf_token %}
-                                        <input id="fileChoose" type="file" accept="text/csv" name="stockFile" />
-                                        <input type="submit" value="Upload" name="AddFile" id="fileSubmit"/>
-                                        <div> Format : 4 Columns </div>
-                                        <div> Symbol, Quantity, Buy Price, Sector(Opt.) </div>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                                        <thead>
-                                            <tr>
-                                                <th data-field="thsym">Symbol</th>
-                                                <th data-field="thqty">Net Qty</th>
-                                                <th data-field="thabp">Avg Price</th>
-                                                <th data-field="thcmp">CMP</th>
-                                                <th data-field="thcvl">Current Value</th>
-                                                <th data-field="thopl">Overall P/L</th>
-                                                <th data-field="thplp">P/L %</th>
-                                                <th data-field="thsec">Sector</th>
-                                            </tr>
-                                        </thead>
-                                        <tfoot>
-                                            <tr>
-                                                <th data-field="thsym">Symbol</th>
-                                                <th data-field="thqty">Net Qty</th>
-                                                <th data-field="thabp">Avg Price</th>
-                                                <th data-field="thcmp">CMP</th>
-                                                <th data-field="thcvl">Current Value</th>
-                                                <th data-field="thopl">Overall P/L</th>
-                                                <th data-field="thplp">P/L %</th>
-                                                <th data-field="thsec">Sector</th>
-                                            </tr>
-                                        </tfoot>
-                                        <tbody id="tbody">
-                                            {% for ind in range %}
-                                                <tr>
-                                                    <td>{{ h_sym|index:ind }}</td>
-                                                    <td>{{ h_qty|index:ind }}</td>
-                                                    <td>{{ h_price|index:ind }}</td>
-                                                    <td>{{ h_ltp|index:ind }}</td>
-                                                    <td>{{ h_cv|index:ind }}</td>
-                                                    <td>{{ h_pl|index:ind }}</td>
-                                                    <td>{{ h_plp|index:ind }}</td>
-                                                    <td>{{ h_sector|index:ind }}</td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </main>
-                <footer class="py-4 bg-light mt-auto">
+                <footer class="py-2 bg-light mt-auto">
                     <div class="container-fluid">
                         <div class="d-flex align-items-center justify-content-between small">
                             <div class="text-muted">Copyright &copy; StockPF 2022</div>
@@ -305,3 +182,123 @@
         {% include "ajax.html" %}
     </body>
 </html>
+
+<!-- <div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-table mr-1"></i>
+        <b>Holdings</b>
+
+        <div class="btn-group dropdown" style="display:inline-block;" title="Add/Remove stocks">
+            <button type="button" class="btn btn-primary" style="font-size:0.8rem; border-top-right-radius:0.25rem; border-bottom-right-radius:0.25rem;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-plus-circle fa-2x"></i>
+            </button>
+
+            <form class="dropdown-menu p-3" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="exampleDropdownFormEmail2">Symbol</label>
+                    <input type="text" name="symbol" id="symid" class="form-control" placeholder="SBIN">
+                </div>
+                <div class="form-group">
+                    <label>Net Qty</label>
+                    <input type="number" name="qty" id="qtyid" class="form-control" placeholder="10">
+                </div>
+                <div class="form-group">
+                    <label>Avg Price</label>
+                    <input type="number" name="price" id="priceid" class="form-control" placeholder="250">
+                </div>
+                <div class="form-group">
+                    <label>Sector</label>
+                    <select class="custom-select" name="sector" id="sectorid">
+                        <option selected>Choose...</option>
+                        <option value="1">Finance</option>
+                        <option value="2">IT &amp; Digital</option>
+                        <option value="3">Pharma</option>
+                        <option value="4">Consumer</option>
+                        <option value="5">Infra</option>
+                        <option value="6">Auto</option>
+                        <option value="7">Power</option>
+                        <option value="8">Chemical</option>
+                        <option value="9">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <input type="button" id="btnadd" class="btn btn-primary" value="Add" name="AddStock" />
+                </div>
+                <div class="form-group" id="drpmsgdiv" style="color:red; margin-bottom:0px;">
+                    {% for message in messages %}
+                    {% if message.tags == 'info' %}
+                    <label style="margin-bottom:0px;" class="small" for="errorMessage" id="drpmsg" data-delay="3000">
+                        {{message}}
+                    </label>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </form>
+        </div>
+
+        <div style="display: inline-block" class="float-right" title="Refresh Data and Charts">
+            <a href="\refresh_charts.html" class="btn btn-file btn-large">
+                <i class="fa fa-retweet"></i>
+            </a>
+        </div>
+
+        <div class="btn-group dropdown dropleft float-right" style="display:inline-block; margin-right: 10px" title="Upload CSV file">
+            <button type="button" class="btn btn-file" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-upload"></i>
+            </button>
+            <form class="dropdown-menu" method="POST" enctype="multipart/form-data" id="fileForm">
+                {% csrf_token %}
+                <input id="fileChoose" type="file" accept="text/csv" name="stockFile" />
+                <input type="submit" value="Upload" name="AddFile" id="fileSubmit"/>
+                <div> Format : 4 Columns </div>
+                <div> Symbol, Quantity, Buy Price, Sector(Opt.) </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th data-field="thsym">Symbol</th>
+                        <th data-field="thqty">Net Qty</th>
+                        <th data-field="thabp">Avg Price</th>
+                        <th data-field="thcmp">CMP</th>
+                        <th data-field="thcvl">Current Value</th>
+                        <th data-field="thopl">Overall P/L</th>
+                        <th data-field="thplp">P/L %</th>
+                        <th data-field="thsec">Sector</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th data-field="thsym">Symbol</th>
+                        <th data-field="thqty">Net Qty</th>
+                        <th data-field="thabp">Avg Price</th>
+                        <th data-field="thcmp">CMP</th>
+                        <th data-field="thcvl">Current Value</th>
+                        <th data-field="thopl">Overall P/L</th>
+                        <th data-field="thplp">P/L %</th>
+                        <th data-field="thsec">Sector</th>
+                    </tr>
+                </tfoot>
+                <tbody id="tbody">
+                    {% for ind in range %}
+                        <tr>
+                            <td>{{ h_sym|index:ind }}</td>
+                            <td>{{ h_qty|index:ind }}</td>
+                            <td>{{ h_price|index:ind }}</td>
+                            <td>{{ h_ltp|index:ind }}</td>
+                            <td>{{ h_cv|index:ind }}</td>
+                            <td>{{ h_pl|index:ind }}</td>
+                            <td>{{ h_plp|index:ind }}</td>
+                            <td>{{ h_sector|index:ind }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> -->
