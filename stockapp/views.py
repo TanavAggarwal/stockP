@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from io import StringIO, BytesIO
 import numpy as np
 import pandas as pd
-import pandas_datareader as web
+import pandas_datareader.data as web
 import datetime as dt
 import tensorflow as tf
 from tensorflow import keras
@@ -22,6 +22,171 @@ from mftool import Mftool
 from django.core.mail import send_mail
 import math
 import random
+from nsepy import get_history
+
+
+def dashb(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    user = request.user
+    h = Holdings.objects.get(usid=user.id)
+
+    if request.method == 'POST':
+        # if 'AddFile' in request.POST:
+        if request.FILES.get('stockFile', False):
+            try:
+                file1 = request.FILES['stockFile']
+            except Exception as e:
+                messages.warning(request, 'No file selected! Upload again')
+                return redirect('dashb')
+            if(file1.name[-3:] != 'csv'):
+                messages.warning(
+                    request, 'File extension error! Upload .csv file')
+            elif(file1.size > 2500000):
+                messages.warning(
+                    request, 'File size error! Size should be less than 2.5Mb')
+            else:
+                # file1r = file1.read()
+                filecsv = pd.read_csv(file1)
+                fsyml = []
+                fqtyl = []
+                fabpl = []
+                fsecl = []
+                fltpl = []
+                Nseo = Nse()
+                for index, row in filecsv.iterrows():
+                    try:
+                        fsym = filecsv.iloc[index, 0]
+                        fsym = fsym.upper()
+                        if Nseo.is_valid_code(fsym) == False:
+                            print(fsym, ' is not a valid NSE code')
+                            continue
+                    except:
+                        print('Exception error in symbol')
+                        continue
+                    try:
+                        fqty = int(filecsv.iloc[index, 1])
+                        if(pd.isnull(fqty)):
+                            print('Quantity is null')
+                            continue
+                    except:
+                        print('Exception error in quantity')
+                        continue
+                    try:
+                        fabp = float(filecsv.iloc[index, 2])
+                        if(pd.isnull(fabp)):
+                            print('Average buy price is null')
+                            continue
+                    except:
+                        print('Exception error in average buy price')
+                        continue
+                    try:
+                        fsec = filecsv.iloc[index, 3]
+                        fsec = fsec.upper()
+                        # sectors = ["Finance", "It", "Pharma", "Consumer",
+                        #            "Infra", "Auto", "Power", "Chemical", "Other"]
+                        if(pd.isnull(fsec) or fsec == ''):
+                            print('Sector is null')
+                            if fsym in h.data.get('symbol', []):
+                                index = h.data.get('symbol', []).index(fsym)
+                                fsec = h.data['sector'][index]
+                            else:
+                                fsec = 'OTHER'
+                    except:
+                        print('Exception error in sector')
+                        if fsym in h.data.get('symbol', []):
+                            index = h.data.get('symbol', []).index(fsym)
+                            fsec = h.data['sector'][index]
+                        else:
+                            fsec = 'OTHER'
+                    URLst = 'https://groww.in/v1/api/stocks_data/v1/accord_points/exchange/NSE/segment/CASH/latest_prices_ohlc/' + fsym
+                    try:
+                        rf = requests.get(URLst, timeout=10)
+                        if rf.ok:
+                            fltp = rf.json()['ltp']
+                        else:
+                            print('Error in fetching ltp for ', fsym)
+                            fltp = 0
+                    except Exception as e:
+                        print('Exception error in fetching ltp for ', fsym)
+                        fltp = 0
+                    fsyml.append(fsym)
+                    fqtyl.append(fqty)
+                    fabpl.append(fabp)
+                    fsecl.append(fsec)
+                    fltpl.append(fltp)
+                    # print(fsym, fqty, fabp, fsec)
+                h.data['symbol'] = fsyml
+                h.data['net_qty'] = fqtyl
+                h.data['avg_price'] = fabpl
+                h.data['sector'] = fsecl
+                h.data['ltp'] = fltpl
+                h.save()
+                messages.success(request, 'Data Updated!')
+            return redirect('dashb')
+        else:
+            messages.warning(request, 'No file selected! Upload again')
+            return redirect('dashb')
+
+    # Nseo = Nse()
+    holdings_size = int(len(h.data.get('symbol', [])))
+    h_sym = h.data.get('symbol', [])
+    h_qty = h.data.get('net_qty', [])
+    h_price = h.data.get('avg_price', [])
+    h_ov = [float('{:.2f}'.format(a * b)) for a, b in zip(h_qty, h_price)]
+    h_ltp = h.data.get('ltp', [])
+    h_sect = h.data.get('sector', [])
+    # sectors = ["Finance", "It", "Pharma", "Consumer",
+    #            "Infra", "Auto", "Power", "Chemical", "Other"]
+    h_sector = h_sect
+    # for i in range(0, holdings_size):
+    #     h_sector.append(sectors[h_sect[i] - 1])
+    h_cv = [float("{:.2f}".format(a * b)) for a, b in zip(h_qty, h_ltp)]
+    h_pl = [float("{:.2f}".format(a - b)) for a, b in zip(h_cv, h_ov)]
+    h_plp = [float("{:.2f}".format(a * 100 / b)) for a, b in zip(h_pl, h_ov)]
+    pl_total = float("{:.2f}".format(sum(h_pl)))
+    sum_ov = float("{:.2f}".format(sum(h_ov)))
+    sum_cv = float("{:.2f}".format(sum(h_cv)))
+    if sum_ov == 0:
+        pl_prcnt = 0
+    else:
+        pl_prcnt = float("{:.2f}".format(pl_total * 100.0 / sum_ov))
+
+    g = Graphs.objects.get(usid=user.id)
+    graph1 = g.g1
+    graph2 = g.g2
+    hd = {}
+    sectors = []
+    #sectors_map = {}
+    for i in range(0, holdings_size):
+        # if hd.__contains__(h_sect[i]):
+        if h_sect[i] in sectors:
+            hd[h_sect[i]].append([h_sym[i], h_qty[i], h_price[i], h_ov[i],
+                                  h_ltp[i], h_cv[i], h_pl[i], h_plp[i], float("{:.2f}".format(h_cv[i]*100/sum_cv))])
+            hd[h_sect[i]][0][0] += h_ov[i]
+            hd[h_sect[i]][0][0] = float("{:.2f}".format(hd[h_sect[i]][0][0]))
+            hd[h_sect[i]][0][1] += h_cv[i]
+            hd[h_sect[i]][0][1] = float("{:.2f}".format(hd[h_sect[i]][0][1]))
+            hd[h_sect[i]][0][2] = (float("{:.2f}".format(
+                (hd[h_sect[i]][0][1]-hd[h_sect[i]][0][0])*100/hd[h_sect[i]][0][0])))
+            hd[h_sect[i]][0][3] = float("{:.2f}".format(
+                hd[h_sect[i]][0][1]*100/sum_cv))
+            #sectors_map[h_sect[i]][0] += h_ov[i]
+            #sectors_map[h_sect[i]][1] += h_cv[i]
+            #sectors_map[h_sect[i]][2] = (sectors_map[h_sect[i]][1]-sectors_map[h_sect[i]][0])*100/sectors_map[h_sect[i]][0]
+        else:
+            sectors.append(h_sect[i])
+            hd.setdefault(h_sect[i], [])
+            hd[h_sect[i]].append([h_ov[i], h_cv[i], h_plp[i], float(
+                "{:.2f}".format(h_cv[i]*100/sum_cv))])
+            hd[h_sect[i]].append([h_sym[i], h_qty[i], h_price[i], h_ov[i],
+                                  h_ltp[i], h_cv[i], h_pl[i], h_plp[i], float("{:.2f}".format(h_cv[i]*100/sum_cv))])
+            #sectors_map[h_sect[i]] = [h_ov[i], h_cv[i], h_plp[i]]
+    # print(hd)
+    # 'segRange': list(range(len(sectors)))
+    # , 'h_sym': h_sym, 'h_qty': h_qty, 'h_price': h_price, 'h_ov': h_ov, 'h_ltp': h_ltp, 'h_cv': h_cv, 'h_pl': h_pl, 'h_plp': h_plp, 'h_sector': h_sector, 'range': list(range(holdings_size))
+    h_count = len(h_sym)
+    return render(request, 'dashb.html', {'h_count': h_count, 'sectors': sectors, 'hd': hd, 'graph1': graph1, 'graph2': graph2, 'sum_ov': sum_ov, 'sum_cv': sum_cv, 'pl_total': pl_total, 'pl_prcnt': pl_prcnt})
 
 
 def login(request):
@@ -38,7 +203,7 @@ def login(request):
     else:
         return render(request, 'login.html', {})
 
- 
+
 def generateOTP():
     digits = "0123456789"
     OTP = ""
@@ -60,100 +225,12 @@ def send_otp(request):
     #print("OTP sent")
     return JsonResponse({'otp': o, 'status': 1})
 
+
 def index(request):
     if not request.user.is_authenticated:
         return redirect('login')
     user = request.user
     h = Holdings.objects.get(usid=user.id)
-
-    if request.method == 'POST':
-        # if 'AddFile' in request.POST:
-        if request.FILES.get('stockFile', False):
-            try:
-                file1 = request.FILES['stockFile']
-            except Exception as e:
-                messages.warning(request, 'No file selected! Upload again')
-                return redirect('index')
-            if(file1.name[-3:] != 'csv'):
-                messages.warning(
-                    request, 'File extension error! Upload .csv file')
-            elif(file1.size > 2500000):
-                messages.warning(
-                    request, 'File size error! Size should be less than 2.5Mb')
-            else:
-                # file1r = file1.read()
-                filecsv = pd.read_csv(file1)
-                fsyml = []
-                fqtyl = []
-                fabpl = []
-                fsecl = []
-                fltpl = []
-                Nseo = Nse()
-                for index, row in filecsv.iterrows():
-                    try:
-                        fsym = filecsv.iloc[index, 0]
-                        fsym = fsym.upper()
-                        if Nseo.is_valid_code(fsym) == False:
-                            continue
-                    except:
-                        continue
-                    try:
-                        fqty = int(filecsv.iloc[index, 1])
-                        if(pd.isnull(fqty)):
-                            continue
-                    except:
-                        continue
-                    try:
-                        fabp = float(filecsv.iloc[index, 2])
-                        if(pd.isnull(fabp)):
-                            continue
-                    except:
-                        continue
-                    try:
-                        fsec = filecsv.iloc[index, 3]
-                        fsec = fsec.capitalize()
-                        sectors = ["Finance", "It", "Pharma", "Consumer",
-                                   "Infra", "Auto", "Power", "Chemical", "Other"]
-                        if(pd.isnull(fsec) or fsec == '' or (fsec not in sectors)):
-                            if fsym in h.data.get('symbol', []):
-                                index = h.data.get('symbol', []).index(fsym)
-                                fsec = h.data['sector'][index]
-                            else:
-                                fsec = 9
-                        else:
-                            fsec = int(sectors.index(fsec)) + 1
-                    except:
-                        if fsym in h.data.get('symbol', []):
-                            index = h.data.get('symbol', []).index(fsym)
-                            fsec = h.data['sector'][index]
-                        else:
-                            fsec = 9
-                    URLst = 'https://groww.in/v1/api/stocks_data/v1/accord_points/exchange/NSE/segment/CASH/latest_prices_ohlc/' + fsym
-                    try:
-                        rf = requests.get(URLst, timeout=10)
-                        if rf.ok:
-                            fltp = rf.json()['ltp']
-                        else:
-                            fltp = 0
-                    except Exception as e:
-                        fltp = 0
-                    fsyml.append(fsym)
-                    fqtyl.append(fqty)
-                    fabpl.append(fabp)
-                    fsecl.append(fsec)
-                    fltpl.append(fltp)
-                    # print(fsym, fqty, fabp, fsec)
-                h.data['symbol'] = fsyml
-                h.data['net_qty'] = fqtyl
-                h.data['avg_price'] = fabpl
-                h.data['sector'] = fsecl
-                h.data['ltp'] = fltpl
-                h.save()
-                messages.success(request, 'Data Updated!')
-            return redirect('index')
-        else:
-            messages.warning(request, 'No file selected! Upload again')
-            return redirect('index')
 
     # Nseo = Nse()
     holdings_size = int(len(h.data.get('symbol', [])))
@@ -163,11 +240,7 @@ def index(request):
     h_ov = [float('{:.2f}'.format(a * b)) for a, b in zip(h_qty, h_price)]
     h_ltp = h.data.get('ltp', [])
     h_sect = h.data.get('sector', [])
-    sectors = ["Finance", "It", "Pharma", "Consumer",
-               "Infra", "Auto", "Power", "Chemical", "Other"]
-    h_sector = []
-    for i in range(0, holdings_size):
-        h_sector.append(sectors[h_sect[i] - 1])
+    h_sector = h_sect
     h_cv = [float("{:.2f}".format(a * b)) for a, b in zip(h_qty, h_ltp)]
     h_pl = [float("{:.2f}".format(a - b)) for a, b in zip(h_cv, h_ov)]
     h_plp = [float("{:.2f}".format(a * 100 / b)) for a, b in zip(h_pl, h_ov)]
@@ -176,6 +249,26 @@ def index(request):
         pl_prcnt = 0
     else:
         pl_prcnt = float("{:.2f}".format(pl_total * 100.0 / sum(h_ov)))
+
+    h_sch = h.data2.get('schemeId', [])
+    h_schC = h.data2.get('schemeCd', [])
+    h_amt = h.data2.get('invAmt', [])
+    h_unt = h.data2.get('units', [])
+    h_nav = h.data2.get('nav', [])
+
+    h_cv2 = [float("{:.2f}".format(a * b)) for a, b in zip(h_unt, h_nav)]
+    h_pl2 = [float("{:.2f}".format(a - b)) for a, b in zip(h_cv, h_amt)]
+    h_plp2 = [float("{:.2f}".format(a * 100 / b)) for a, b in zip(h_pl, h_amt)]
+    pl_total2 = sum(h_pl2)
+    if sum(h_amt) == 0:
+        pl_prcnt2 = 0
+    else:
+        pl_prcnt2 = float("{:.2f}".format(pl_total2 * 100.0 / sum(h_amt)))
+
+    prtf_inv = float("{:.2f}".format(sum(h_ov) + sum(h_amt)))
+    prtf_val = float("{:.2f}".format(sum(h_cv) + sum(h_cv2)))
+    prtf_pl = float("{:.2f}".format(prtf_val - prtf_inv))
+    prtf_plp = float("{:.2f}".format(prtf_pl * 100 / prtf_inv))
 
     URL_sen = 'https://groww.in/v1/api/stocks_data/v1/accord_points/exchange/BSE/segment/CASH/latest_indices_ohlc/SENSEX'
     URL_nif = 'https://groww.in/v1/api/stocks_data/v1/accord_points/exchange/NSE/segment/CASH/latest_indices_ohlc/NIFTY'
@@ -218,10 +311,8 @@ def index(request):
     # else:
     #    nifty_lp = 18200  # Nseo.get_index_quote("nifty 50")['lastPrice']
     #    niftybank_lp = 39000  # Nseo.get_index_quote("nifty bank")['lastPrice']
-    g = Graphs.objects.get(usid=user.id)
-    graph1 = g.g1
-    graph2 = g.g2
-    return render(request, 'index.html', {'graph1': graph1, 'graph2': graph2, 'nifty_lp': nifty_lp, 'sensex_lp': sensex_lp, 'pl_total': pl_total, 'pl_prcnt': pl_prcnt, 'h_sym': h_sym, 'h_qty': h_qty, 'h_price': h_price, 'h_ov': h_ov, 'h_ltp': h_ltp, 'h_cv': h_cv, 'h_pl': h_pl, 'h_plp': h_plp, 'h_sector': h_sector, 'range': list(range(holdings_size))})
+
+    return render(request, 'index.html', {'prtf_inv': prtf_inv, 'prtf_val': prtf_val, 'prtf_pl': prtf_pl, 'prtf_plp': prtf_plp})
 
 
 def save_data(request):
@@ -234,6 +325,8 @@ def save_data(request):
         rp_qty = str(request.POST['qty'])
         rp_price = str(request.POST['price'])
         rp_sector = str(request.POST['sector'])
+        rp_sector = rp_sector.upper()
+        print(rp_sector)
         if sym == '' or rp_qty == '' or rp_price == '' or rp_sector == '':
             messages.info(request, 'Fill all fields!')
             return JsonResponse({'status': 0})
@@ -247,7 +340,7 @@ def save_data(request):
                             request.POST['price']) * int(request.POST['qty'])) / (h.data['net_qty'][index] + int(request.POST['qty']))
                     h.data['net_qty'][index] = h.data['net_qty'][index] + \
                         int(request.POST['qty'])
-                    h.data['sector'][index] = int(request.POST['sector'])
+                    h.data['sector'][index] = (request.POST['sector'])
                     h.save()
                 else:
                     h.data['symbol'].pop(index)
@@ -263,7 +356,7 @@ def save_data(request):
                 h.data['avg_price'] = h.data.get(
                     'avg_price', []) + [int(request.POST['price'])]
                 h.data['sector'] = h.data.get(
-                    'sector', []) + [int(request.POST['sector'])]
+                    'sector', []) + [rp_sector]
                 URLst = 'https://groww.in/v1/api/stocks_data/v1/accord_points/exchange/NSE/segment/CASH/latest_prices_ohlc/' + sym
 
                 try:
@@ -350,11 +443,11 @@ def register(request):
         email = request.POST['emailf']
         password1 = request.POST['password1']
         password2 = request.POST['password2']
-        
+
         if first_name == '' or last_name == '' or email == '' or password1 == '':
             messages.info(request, 'Fill all fields!')
             return redirect('register')
-        
+
         if password1 == password2:
             if User.objects.filter(email=email).exists():
                 messages.info(
@@ -428,32 +521,51 @@ def refresh_charts(request):
     h_cv = [a * b for a, b in zip(h_qty, h_ltp)]
     h_pl = [a - b for a, b in zip(h_cv, h_ov)]
 
-    sectors = ["Finance", "It", "Pharma", "Consumer",
-               "Infra", "Auto", "Power", "Chemical", "Other"]
-    sector_ov = [0] * 9
-    sector_cv = [0] * 9
-    sector_pl = [0] * 9
+    # sectors = ["Finance", "It", "Pharma", "Consumer",
+    #            "Infra", "Auto", "Power", "Chemical", "Other"]
+
+    secc = {}
     for i in range(holdings_size):
-        sector_ov[h_sector[i] - 1] += h_ov[i]
-        sector_cv[h_sector[i] - 1] += h_cv[i]
-    for i in range(9):
-        sector_pl[i] = sector_cv[i] - sector_ov[i]
+        if secc.__contains__(h_sector[i]):
+            secc[h_sector[i]]['ov'] += h_ov[i]
+            secc[h_sector[i]]['cv'] += h_cv[i]
+            secc[h_sector[i]]['pl'] += h_pl[i]
+        else:
+            secc.setdefault(h_sector[i], {
+                'ov': h_ov[i],
+                'cv': h_cv[i],
+                'pl': h_pl[i],
+            })
+
+    # sector_ov = [0] * 9
+    # sector_cv = [0] * 9
+    # sector_pl = [0] * 9
+    # for i in range(holdings_size):
+    #     sector_ov[h_sector[i] - 1] += h_ov[i]
+    #     sector_cv[h_sector[i] - 1] += h_cv[i]
+    # for i in range(9):
+    #     sector_pl[i] = sector_cv[i] - sector_ov[i]
 
     nz_sec = []
     nz_ov = []
     nz_cv = []
     nz_pl = []
-    for i in range(9):
-        if sector_ov[i] != 0:
-            nz_sec.append(sectors[i])
-            nz_ov.append(sector_ov[i])
-            nz_cv.append(sector_cv[i])
-            nz_pl.append(nz_cv[-1] - nz_ov[-1])
+    for sec in secc:
+        nz_sec.append(sec)
+        nz_ov.append(secc[sec]['ov'])
+        nz_cv.append(secc[sec]['cv'])
+        nz_pl.append(secc[sec]['pl'])
+    # for i in range(9):
+    #     if sector_ov[i] != 0:
+    #         nz_sec.append(sectors[i])
+    #         nz_ov.append(sector_ov[i])
+    #         nz_cv.append(sector_cv[i])
+    #         nz_pl.append(nz_cv[-1] - nz_ov[-1])
 
     fig1, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
     circ = plt.Circle((0, 0), 0.45, color='white')
     ex = [0.01] * len(nz_sec)
-    wedges, texts, autotexts = ax.pie(nz_ov, startangle=0, autopct='%1.0f%%',
+    wedges, texts, autotexts = ax.pie(nz_cv, startangle=0, autopct='%1.0f%%',
                                       wedgeprops={'linewidth': 1.5, 'edgecolor': 'white'}, pctdistance=0.65, explode=ex)
     plt.gcf().gca().add_artist(circ)
     ax.legend(wedges, nz_sec, title="Sectors",
@@ -466,6 +578,7 @@ def refresh_charts(request):
     img1data.seek(0)
     data1 = img1data.getvalue()
 
+    nz_sec = [string[:3] for string in nz_sec]
     fig2 = plt.figure()
     plt.bar(nz_sec, nz_pl)
     fig2.set_size_inches(6.5, 2.5)
@@ -484,7 +597,7 @@ def refresh_charts(request):
     g.g1 = data1
     g.g2 = data2
     g.save()
-    return redirect('index')
+    return redirect('dashb')
 
 
 def predictor(request):
@@ -498,21 +611,18 @@ def predictor(request):
         end = dt.date.today()
         start = end - dt.timedelta(days=300)
         if Nseo.is_valid_code(sym):
-            sym = sym + ".BSE"
+            sym = sym
         else:
             messages.info(request, 'Invalid Symbol!')
             return render(request, 'predictor.html', {'graph': data})
-        # df = web.DataReader(sym, 'yahoo', start, end)
-        # df = web.DataReader(sym, "av-daily", start=start,
-        #                end=end, api_key='CT48RJJ2SKTGSNT4')
         try:
-            df = web.DataReader(sym, "av-daily", start=start,
-                                end=end, api_key='CT48RJJ2SKTGSNT4')
+            #df = web.DataReader(sym, "av-daily", start=start, end=end, api_key='CT48RJJ2SKTGSNT4')
+            #df = web.DataReader(sym, "yahoo", start=start, end=end)
+            df = get_history(symbol=sym, start=start, end=end)
         except Exception as e:
-            messages.info(request, 'Cannot Fetch Data!')
+            messages.info(request, e)
             return render(request, 'predictor.html', {'graph': data})
-
-        df1 = df.reset_index()['close']
+        df1 = df.reset_index()['Close']
 
         df1 = df1.tail(200)
         reconstructed_model = tf.keras.models.load_model(
@@ -618,12 +728,12 @@ def mfholding(request):
     h_unt = h.data2.get('units', [])
     h_nav = h.data2.get('nav', [])
     h_cv = [float("{:.2f}".format(a * b)) for a, b in zip(h_unt, h_nav)]
-    
+
     if(len(h_sch) == 0):
         hldgs = {}
         data1 = "No Data! Add Mutual Funds in your portfolio for analysis!"
         return render(request, 'mfholding.html', {'hdata': hldgs, 'graph1': data1})
-    
+
     URL2 = "https://www.amfiindia.com/spages/NAVOpen.txt"
     try:
         r2 = requests.get(URL2, timeout=10).text
@@ -757,8 +867,8 @@ def settings(request):
     if request.method == 'POST':
         ufname = str(request.POST['ufname'])
         ulname = str(request.POST['ulname'])
-        #uemail = str(request.POST['uemail'])
-        #uphone = str(request.POST['uphone'])
+        # uemail = str(request.POST['uemail'])
+        # uphone = str(request.POST['uphone'])
         upass = str(request.POST['upass'])
         ucpass = str(request.POST['ucpass'])
 
