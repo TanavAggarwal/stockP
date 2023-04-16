@@ -147,10 +147,12 @@ STATICFILES_DIRS = [
 #STATIC_ROOT = os.path.join(BASE_DIR, 'staticassets')
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST_USER = 'stockPFolio@gmail.com'
 EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'stockpfolio@gmail.com'
+# This is app password , mail paas is -> stockpf@123
+EMAIL_HOST_PASSWORD = "oktisfevoitdmite"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_PASSWORD = "stockpf@123"
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 django_on_heroku.settings(locals())
