@@ -19,6 +19,10 @@ class Holdings(models.Model):
         default={'symbol': [], 'net_qty': [], 'avg_price': [], 'ltp': [], 'sector': []})
     data2 = models.JSONField(
         default={'schemeId': [], 'invAmt': [], 'units': [], 'nav': [], 'schemeCd': []})
+    data3 = models.JSONField(
+        default={'email': [], 'status': [], 'perm': []})
+    publik = models.BooleanField(default=False)
+    premiumPlan = models.IntegerField(default=0)
 
 
 class Graphs(models.Model):
