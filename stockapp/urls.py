@@ -12,7 +12,7 @@ urlpatterns = [
     path('login.html/', views.login, name='login'),
     path('logout.html/', views.logout, name='logout'),
     path('register.html/', views.register, name='register'),
-    path('password.html/', views.password, name='password'),
+    path('forgot_password.html/', views.forgot_password, name='forgot_password'),
     path('predictor.html/', views.predictor, name='predictor'),
     path('refresh_charts.html/', views.refresh_charts, name='refresh_charts'),
     path('refresh_funds.html/', views.refresh_funds, name='refresh_funds'),
@@ -22,4 +22,6 @@ urlpatterns = [
     path('mfholding.html/', views.mfholding, name='mfholding'),
     path('DelEq.html/', views.deleq, name='DelEq'),
     path('DelMf.html/', views.delmf, name='DelMf'),
+    path('friends.html/', views.friends, name='friends'),
+    path('trending.html/', views.trending, name='trending'),
 ]
