@@ -157,7 +157,7 @@ def dashb(request):
     graph2 = g.g2
     hd = {}
     sectors = []
-    #sectors_map = {}
+    # sectors_map = {}
     for i in range(0, holdings_size):
         # if hd.__contains__(h_sect[i]):
         if h_sect[i] in sectors:
@@ -171,9 +171,9 @@ def dashb(request):
                 (hd[h_sect[i]][0][1]-hd[h_sect[i]][0][0])*100/hd[h_sect[i]][0][0])))
             hd[h_sect[i]][0][3] = float("{:.2f}".format(
                 hd[h_sect[i]][0][1]*100/sum_cv))
-            #sectors_map[h_sect[i]][0] += h_ov[i]
-            #sectors_map[h_sect[i]][1] += h_cv[i]
-            #sectors_map[h_sect[i]][2] = (sectors_map[h_sect[i]][1]-sectors_map[h_sect[i]][0])*100/sectors_map[h_sect[i]][0]
+            # sectors_map[h_sect[i]][0] += h_ov[i]
+            # sectors_map[h_sect[i]][1] += h_cv[i]
+            # sectors_map[h_sect[i]][2] = (sectors_map[h_sect[i]][1]-sectors_map[h_sect[i]][0])*100/sectors_map[h_sect[i]][0]
         else:
             sectors.append(h_sect[i])
             hd.setdefault(h_sect[i], [])
@@ -181,7 +181,7 @@ def dashb(request):
                 "{:.2f}".format(h_cv[i]*100/sum_cv))])
             hd[h_sect[i]].append([h_sym[i], h_qty[i], h_price[i], h_ov[i],
                                   h_ltp[i], h_cv[i], h_pl[i], h_plp[i], float("{:.2f}".format(h_cv[i]*100/sum_cv))])
-            #sectors_map[h_sect[i]] = [h_ov[i], h_cv[i], h_plp[i]]
+            # sectors_map[h_sect[i]] = [h_ov[i], h_cv[i], h_plp[i]]
     # print(hd)
     # 'segRange': list(range(len(sectors)))
     # , 'h_sym': h_sym, 'h_qty': h_qty, 'h_price': h_price, 'h_ov': h_ov, 'h_ltp': h_ltp, 'h_cv': h_cv, 'h_pl': h_pl, 'h_plp': h_plp, 'h_sector': h_sector, 'range': list(range(holdings_size))
@@ -215,14 +215,14 @@ def generateOTP():
 def send_otp(request):
     email = str(request.POST["email"])
     if User.objects.filter(email=email).exists():
-        #print("email found!")
+        # print("email found!")
         return JsonResponse({'status': 0})
     o = generateOTP()
-    #print("OTP :", o)
+    print("OTP :", o)
     htmlgen = '<p>Your OTP is <strong>' + o + '</strong></p>'
-    send_mail('StockPF OTP request', o, '<your gmail id>', [
-              email], fail_silently=False, html_message=htmlgen)
-    #print("OTP sent")
+    send_mail('StockPF OTP request', o, 'stockpfolio@gmail.com', [
+              email], fail_silently=False,)
+    # print("OTP sent")
     return JsonResponse({'otp': o, 'status': 1})
 
 
@@ -268,7 +268,10 @@ def index(request):
     prtf_inv = float("{:.2f}".format(sum(h_ov) + sum(h_amt)))
     prtf_val = float("{:.2f}".format(sum(h_cv) + sum(h_cv2)))
     prtf_pl = float("{:.2f}".format(prtf_val - prtf_inv))
-    prtf_plp = float("{:.2f}".format(prtf_pl * 100 / prtf_inv))
+    if(prtf_inv == 0):
+        prtf_plp = 0
+    else:
+        prtf_plp = float("{:.2f}".format(prtf_pl * 100 / prtf_inv))
 
     URL_sen = 'https://groww.in/v1/api/stocks_data/v1/accord_points/exchange/BSE/segment/CASH/latest_indices_ohlc/SENSEX'
     URL_nif = 'https://groww.in/v1/api/stocks_data/v1/accord_points/exchange/NSE/segment/CASH/latest_indices_ohlc/NIFTY'
@@ -331,7 +334,10 @@ def save_data(request):
             messages.info(request, 'Fill all fields!')
             return JsonResponse({'status': 0})
         Nseo = Nse()
-        if Nseo.is_valid_code(sym):
+        urll = "https://groww.in/v1/api/stocks_data/v1/accord_points/exchange/NSE/segment/CASH/latest_prices_ohlc/"+sym
+        # print(urll)
+        r = requests.get(urll)
+        if r.ok:
             if sym in h.data.get('symbol', []):
                 index = h.data.get('symbol', []).index(sym)
                 if (h.data['net_qty'][index] + int(request.POST['qty'])) != 0:
@@ -342,6 +348,7 @@ def save_data(request):
                         int(request.POST['qty'])
                     h.data['sector'][index] = (request.POST['sector'])
                     h.save()
+                    print("2")
                 else:
                     h.data['symbol'].pop(index)
                     h.data['net_qty'].pop(index)
@@ -349,6 +356,7 @@ def save_data(request):
                     h.data['sector'].pop(index)
                     h.data['ltp'].pop(index)
                     h.save()
+                    print("3")
             else:
                 h.data['symbol'] = h.data.get('symbol', []) + [sym]
                 h.data['net_qty'] = h.data.get(
@@ -377,6 +385,7 @@ def save_data(request):
                 h.data['ltp'] = h.data.get(
                     'ltp', []) + [float(stltp)]
                 h.save()
+                print("4")
 
             nhd = h.data
             return JsonResponse({'status': 1, 'nhd': nhd})
@@ -477,7 +486,7 @@ def logout(request):
     return redirect('login')
 
 
-def password(request):
+def forgot_password(request):
     return render(request, 'password.html', {})
 
 
@@ -610,15 +619,21 @@ def predictor(request):
         Nseo = Nse()
         end = dt.date.today()
         start = end - dt.timedelta(days=300)
-        if Nseo.is_valid_code(sym):
+        urll = "https://groww.in/v1/api/stocks_data/v1/accord_points/exchange/NSE/segment/CASH/latest_prices_ohlc/"+sym
+        # print(urll)
+        r = requests.get(urll)
+        if r.ok:
             sym = sym
         else:
             messages.info(request, 'Invalid Symbol!')
             return render(request, 'predictor.html', {'graph': data})
+
         try:
-            #df = web.DataReader(sym, "av-daily", start=start, end=end, api_key='CT48RJJ2SKTGSNT4')
-            #df = web.DataReader(sym, "yahoo", start=start, end=end)
-            df = get_history(symbol=sym, start=start, end=end)
+            df = web.DataReader(
+                sym, "av-daily", start=start, end=end, api_key='CT48RJJ2SKTGSNT4')
+            # df = web.DataReader(sym, "yahoo", start=start, end=end)
+            # df = get_history(symbol=sym, start=start, end=end)
+            print(df)
         except Exception as e:
             messages.info(request, e)
             return render(request, 'predictor.html', {'graph': data})
@@ -886,6 +901,228 @@ def settings(request):
         return redirect('settings')
 
     return render(request, 'settings.html', {})
+
+
+def friends(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    user = request.user
+    h = Holdings.objects.get(usid=user.id)
+
+    if request.method == 'POST':
+        femail = str(request.POST['Email'])
+        print(femail)
+        if(femail != ""):
+            try:
+                fuser = User.objects.get(email=femail)
+                print("fuser", fuser.id)
+                if(fuser.id != user.id):
+                    print("lst", h.data3['email'])
+                    # status - 0(sent), 1(accepted), 2(rejected)
+                    # perm - 0(equity), 1(mfund), 2(both)
+                    if(femail not in h.data3['email']):
+                        h.data3['email'].append(femail)
+                        h.data3['status'].append(1)
+                        h.data3['perm'].append(2)
+                        h.save()
+                        print("save1")
+                        h2 = Holdings.objects.get(usid=fuser.id)
+                        h2.data3['email'].append(user.email)
+                        h2.data3['status'].append(1)
+                        h2.data3['perm'].append(2)
+                        h2.save()
+                        print("save2")
+                        messages.success(
+                            request, "Friend added successfully!")
+                        print("Success")
+                        return redirect('friends')
+                    else:
+                        messages.warning(request, "Friend already added!")
+                        print("Already added")
+                        return redirect('friends')
+                else:
+                    messages.warning(request, "You can't add yourself!")
+                    print("Self")
+                    return redirect('friends')
+            except Exception as e:
+                messages.warning(request, "User not found!")
+                print("User not found", e)
+                return redirect('friends')
+        else:
+            messages.warning(request, "Please enter a valid email!")
+            print("Invalid email")
+            return redirect('friends')
+
+    femails = h.data3['email']
+    fd = {}
+    for femail in femails:
+        fuser = User.objects.get(email=femail)
+        fuserid = fuser.id
+        fname = fuser.first_name
+        h = Holdings.objects.get(usid=fuserid)
+        holdings_size = int(len(h.data.get('symbol', [])))
+        h_sym = h.data.get('symbol', [])
+        h_qty = h.data.get('net_qty', [])
+        h_price = h.data.get('avg_price', [])
+        h_ov = [float('{:.2f}'.format(a * b)) for a, b in zip(h_qty, h_price)]
+        h_ltp = h.data.get('ltp', [])
+        h_sect = h.data.get('sector', [])
+        # sectors = ["Finance", "It", "Pharma", "Consumer",
+        #            "Infra", "Auto", "Power", "Chemical", "Other"]
+        h_sector = h_sect
+        # for i in range(0, holdings_size):
+        #     h_sector.append(sectors[h_sect[i] - 1])
+        h_cv = [float("{:.2f}".format(a * b)) for a, b in zip(h_qty, h_ltp)]
+        h_pl = [float("{:.2f}".format(a - b)) for a, b in zip(h_cv, h_ov)]
+        h_plp = [float("{:.2f}".format(a * 100 / b))
+                 for a, b in zip(h_pl, h_ov)]
+        pl_total = float("{:.2f}".format(sum(h_pl)))
+        sum_ov = float("{:.2f}".format(sum(h_ov)))
+        sum_cv = float("{:.2f}".format(sum(h_cv)))
+        if sum_ov == 0:
+            pl_prcnt = 0
+        else:
+            pl_prcnt = float("{:.2f}".format(pl_total * 100.0 / sum_ov))
+
+        hd = {}
+        sectors = []
+        # sectors_map = {}
+        for i in range(0, holdings_size):
+            # if hd.__contains__(h_sect[i]):
+            if h_sect[i] in sectors:
+                hd[h_sect[i]].append([h_sym[i], h_qty[i], h_price[i], h_ov[i],
+                                      h_ltp[i], h_cv[i], h_pl[i], h_plp[i], float("{:.2f}".format(h_cv[i]*100/sum_cv))])
+                hd[h_sect[i]][0][0] += h_ov[i]
+                hd[h_sect[i]][0][0] = float(
+                    "{:.2f}".format(hd[h_sect[i]][0][0]))
+                hd[h_sect[i]][0][1] += h_cv[i]
+                hd[h_sect[i]][0][1] = float(
+                    "{:.2f}".format(hd[h_sect[i]][0][1]))
+                hd[h_sect[i]][0][2] = (float("{:.2f}".format(
+                    (hd[h_sect[i]][0][1]-hd[h_sect[i]][0][0])*100/hd[h_sect[i]][0][0])))
+                hd[h_sect[i]][0][3] = float("{:.2f}".format(
+                    hd[h_sect[i]][0][1]*100/sum_cv))
+                # sectors_map[h_sect[i]][0] += h_ov[i]
+                # sectors_map[h_sect[i]][1] += h_cv[i]
+                # sectors_map[h_sect[i]][2] = (sectors_map[h_sect[i]][1]-sectors_map[h_sect[i]][0])*100/sectors_map[h_sect[i]][0]
+            else:
+                sectors.append(h_sect[i])
+                hd.setdefault(h_sect[i], [])
+                hd[h_sect[i]].append([h_ov[i], h_cv[i], h_plp[i], float(
+                    "{:.2f}".format(h_cv[i]*100/sum_cv))])
+                hd[h_sect[i]].append([h_sym[i], h_qty[i], h_price[i], h_ov[i],
+                                      h_ltp[i], h_cv[i], h_pl[i], h_plp[i], float("{:.2f}".format(h_cv[i]*100/sum_cv))])
+                # sectors_map[h_sect[i]] = [h_ov[i], h_cv[i], h_plp[i]]
+        # print(hd)
+
+        holdings_size = int(len(h.data2.get('schemeId', [])))
+        h_sch = h.data2.get('schemeId', [])
+        h_schC = h.data2.get('schemeCd', [])
+        h_amt = h.data2.get('invAmt', [])
+        h_unt = h.data2.get('units', [])
+        h_nav = h.data2.get('nav', [])
+        h_cv = [float("{:.2f}".format(a * b)) for a, b in zip(h_unt, h_nav)]
+        h_pl = [float("{:.2f}".format(a - b)) for a, b in zip(h_cv, h_amt)]
+        h_plp = [float("{:.2f}".format(a * 100 / b))
+                 for a, b in zip(h_pl, h_amt)]
+        # 'h_schC': h_schC, 'h_sch': h_sch, 'h_amt': h_amt, 'h_unt': h_unt, 'h_nav': h_nav, 'h_cv': h_cv, 'h_pl': h_pl, 'h_plp': h_plp, 'range': list(range(holdings_size))
+        fd[fname] = [hd, h_sch, h_schC, h_amt, h_unt, h_nav,
+                     h_cv, h_pl, h_plp, list(range(holdings_size))]
+    return render(request, 'friends.html', {'fd': fd})
+
+
+def trending(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    user = request.user
+    h = Holdings.objects.get(usid=user.id)
+
+    if request.method == "POST":
+        publik = request.POST.get('changeStatus')
+        if(publik == 'Private'):
+            h.publik = True
+            h.save()
+        else:
+            h.publik = False
+            h.save()
+        return redirect('trending')
+
+    publik = 'Public' if h.publik else 'Private'
+    allUsers = User.objects.all()
+    fd = {}
+    for emailTuple in list(allUsers.values_list('email')):
+        femail = emailTuple[0]
+        if femail == user.email:
+            print("Skip self")
+            continue
+        fuser = User.objects.get(email=femail)
+        fuserid = fuser.id
+        fname = fuser.first_name
+        try:
+            h = Holdings.objects.get(usid=fuserid)
+        except:
+            continue
+        if(h.publik == False):
+            continue
+        holdings_size = int(len(h.data.get('symbol', [])))
+        h_sym = h.data.get('symbol', [])
+        h_qty = h.data.get('net_qty', [])
+        h_price = h.data.get('avg_price', [])
+        h_ov = [float('{:.2f}'.format(a * b)) for a, b in zip(h_qty, h_price)]
+        h_ltp = h.data.get('ltp', [])
+        h_sect = h.data.get('sector', [])
+        # sectors = ["Finance", "It", "Pharma", "Consumer",
+        #            "Infra", "Auto", "Power", "Chemical", "Other"]
+        h_sector = h_sect
+        # for i in range(0, holdings_size):
+        #     h_sector.append(sectors[h_sect[i] - 1])
+        h_cv = [float("{:.2f}".format(a * b)) for a, b in zip(h_qty, h_ltp)]
+        h_pl = [float("{:.2f}".format(a - b)) for a, b in zip(h_cv, h_ov)]
+        h_plp = [float("{:.2f}".format(a * 100 / b))
+                 for a, b in zip(h_pl, h_ov)]
+        pl_total = float("{:.2f}".format(sum(h_pl)))
+        sum_ov = float("{:.2f}".format(sum(h_ov)))
+        sum_cv = float("{:.2f}".format(sum(h_cv)))
+        if sum_ov == 0:
+            pl_prcnt = 0
+        else:
+            pl_prcnt = float("{:.2f}".format(pl_total * 100.0 / sum_ov))
+
+        hd = {}
+        sectors = []
+        # sectors_map = {}
+        for i in range(0, holdings_size):
+            # if hd.__contains__(h_sect[i]):
+            if h_sect[i] in sectors:
+                hd[h_sect[i]].append([h_sym[i], h_qty[i], h_price[i], h_ov[i],
+                                      h_ltp[i], h_cv[i], h_pl[i], h_plp[i], float("{:.2f}".format(h_cv[i]*100/sum_cv))])
+                hd[h_sect[i]][0][0] += h_ov[i]
+                hd[h_sect[i]][0][0] = float(
+                    "{:.2f}".format(hd[h_sect[i]][0][0]))
+                hd[h_sect[i]][0][1] += h_cv[i]
+                hd[h_sect[i]][0][1] = float(
+                    "{:.2f}".format(hd[h_sect[i]][0][1]))
+                hd[h_sect[i]][0][2] = (float("{:.2f}".format(
+                    (hd[h_sect[i]][0][1]-hd[h_sect[i]][0][0])*100/hd[h_sect[i]][0][0])))
+                hd[h_sect[i]][0][3] = float("{:.2f}".format(
+                    hd[h_sect[i]][0][1]*100/sum_cv))
+                # sectors_map[h_sect[i]][0] += h_ov[i]
+                # sectors_map[h_sect[i]][1] += h_cv[i]
+                # sectors_map[h_sect[i]][2] = (sectors_map[h_sect[i]][1]-sectors_map[h_sect[i]][0])*100/sectors_map[h_sect[i]][0]
+            else:
+                sectors.append(h_sect[i])
+                hd.setdefault(h_sect[i], [])
+                hd[h_sect[i]].append([h_ov[i], h_cv[i], h_plp[i], float(
+                    "{:.2f}".format(h_cv[i]*100/sum_cv))])
+                hd[h_sect[i]].append([h_sym[i], h_qty[i], h_price[i], h_ov[i],
+                                      h_ltp[i], h_cv[i], h_pl[i], h_plp[i], float("{:.2f}".format(h_cv[i]*100/sum_cv))])
+                # sectors_map[h_sect[i]] = [h_ov[i], h_cv[i], h_plp[i]]
+        # print(hd)
+        fd[fname] = hd
+
+    return render(request, 'trending.html', {'publik': publik, 'fd': fd})
 
 # def mfh_charts(request):  #For Additional plots for holdings analysis
 #    if request.method == "POST":
